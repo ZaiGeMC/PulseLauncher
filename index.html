@@ -362,25 +362,27 @@
       });
     });
 
-    document.getElementById('launchBtn').addEventListener('click', () => {
-      window.location.href = 'https://www.baidu.com';
-    });
-
     // 检查更新
     async function checkUpdate() {
+      let latest = null;
       try {
         const res = await fetch('update.json?t=' + Date.now());
-        const data = await res.json();
-        const versionEl = document.getElementById('launchVersion');
-        const noticeEl = document.getElementById('updateNotice');
-        versionEl.textContent = 'V' + data.version;
-        document.getElementById('launchBtn').onclick = () => {
-          window.location.href = data.downloadUrl;
-        };
-        noticeEl.style.display = 'block';
-        noticeEl.textContent = '最新版本 V' + data.version + ' — ' + (data.releaseNotes || '');
+        latest = await res.json();
       } catch (e) {
-        document.getElementById('launchVersion').textContent = 'V1.0.1';
+        // 读取失败时使用默认版本，不阻止下载
+        latest = { version: '1.0.1', downloadUrl: '' };
+      }
+      const versionEl = document.getElementById('launchVersion');
+      const noticeEl = document.getElementById('updateNotice');
+      versionEl.textContent = 'V' + latest.version;
+      document.getElementById('launchBtn').onclick = () => {
+        if (latest.downloadUrl) {
+          window.location.href = latest.downloadUrl;
+        }
+      };
+      if (latest.releaseNotes) {
+        noticeEl.style.display = 'block';
+        noticeEl.textContent = '最新版本 V' + latest.version + ' — ' + latest.releaseNotes;
       }
     }
     checkUpdate();
